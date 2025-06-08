@@ -1,6 +1,7 @@
 package org.example.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,7 +23,7 @@ public class User {
         this.name = name;
         this.email = email;
         this.age = age;
-        this.createdAt = LocalDateTime.now(); // важно!
+        this.createdAt = LocalDateTime.now();
     }
 
     public User() {
@@ -63,5 +64,10 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    //для тестов
+    public void setId(Long id) {
+        this.id = id;
     }
 }
