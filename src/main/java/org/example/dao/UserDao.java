@@ -14,9 +14,7 @@ public class UserDao {
     private static final Logger logger = LoggerFactory.getLogger(UserDao.class);
     private final SessionFactory sessionFactory;
 
-    public UserDao() {
-        this.sessionFactory = HibernateUtil.getSessionFactory();
-    }
+
 
     //конструктор для тестов
     public UserDao(SessionFactory sessionFactory) {
@@ -25,7 +23,7 @@ public class UserDao {
 
     public void save(User user) {
         Transaction tx = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        try (Session session = sessionFactory.openSession()) {
             tx = session.beginTransaction();
             session.persist(user);
             tx.commit();
@@ -36,7 +34,7 @@ public class UserDao {
     }
 
     public User get(Long id) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        try (Session session = sessionFactory.openSession()) {
             return session.get(User.class, id);
         } catch (Exception e) {
             logger.error("Ошибка при получении пользователя по id = {}", id, e);
@@ -45,7 +43,7 @@ public class UserDao {
     }
 
     public List<User> getAll() {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        try (Session session = sessionFactory.openSession()) {
             return session.createQuery("from User", User.class).list();
         } catch (Exception e) {
             logger.error("Ошибка при получении всех пользователей", e);
@@ -55,7 +53,7 @@ public class UserDao {
 
     public void update(User user) {
         Transaction tx = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        try (Session session = sessionFactory.openSession()) {
             tx = session.beginTransaction();
             session.merge(user);
             tx.commit();
@@ -67,7 +65,7 @@ public class UserDao {
 
     public void delete(Long id) {
         Transaction tx = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        try (Session session = sessionFactory.openSession()) {
             tx = session.beginTransaction();
             User user = session.get(User.class, id);
             if (user != null) {

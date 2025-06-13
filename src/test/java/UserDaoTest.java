@@ -2,10 +2,13 @@
 
 import org.example.dao.UserDao;
 import org.example.model.User;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 
@@ -16,9 +19,9 @@ public class UserDaoTest {
 
     private static final PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("postgres:14.1-alpine")
-                    .withDatabaseName("testdb")
-                    .withUsername("testuser")
-                    .withPassword("testpass");
+                    .withDatabaseName("postgres")
+                    .withUsername("postgres")
+                    .withPassword("postgres");
 
     private SessionFactory sessionFactory;
     private UserDao userDao;
@@ -41,6 +44,15 @@ public class UserDaoTest {
 
         sessionFactory = configuration.buildSessionFactory();
         userDao = new UserDao(sessionFactory);
+    }
+
+    @BeforeEach
+    void clearDatabase() {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction tx = session.beginTransaction();
+            session.createQuery("delete from User").executeUpdate(); // очистка таблицы
+            tx.commit();
+        }
     }
 
     @AfterAll
@@ -94,4 +106,49 @@ public class UserDaoTest {
         User deleted = userDao.get(user.getId());
         assertNull(deleted);
     }
+
+    @Test
+    void testSave_ExceptionHandled() {
+        SessionFactory mockFactory = mock(SessionFactory.class);
+        when(mockFactory.openSession()).thenThrow(new RuntimeException("Ошибка сессии"));
+
+        UserDao faultyDao = new UserDao(mockFactory);
+        User testUser = new User("Ошибка", "fail@example.com", 99);
+
+        assertDoesNotThrow(() -> faultyDao.save(testUser));
+    }
+
+    @Test
+    void testUpdate_ExceptionHandled() {
+        SessionFactory mockFactory = mock(SessionFactory.class);
+        when(mockFactory.openSession()).thenThrow(new RuntimeException("Ошибка при обновлении"));
+
+        UserDao faultyDao = new UserDao(mockFactory);
+        User testUser = new User("Ошибка", "update@example.com", 77);
+
+        assertDoesNotThrow(() -> faultyDao.update(testUser));
+    }
+
+    @Test
+    void testDelete_ExceptionHandled() {
+        SessionFactory mockFactory = mock(SessionFactory.class);
+        when(mockFactory.openSession()).thenThrow(new RuntimeException("Ошибка при удалении"));
+
+        UserDao faultyDao = new UserDao(mockFactory);
+
+        assertDoesNotThrow(() -> faultyDao.delete(123L));
+    }
+
+    @Test
+    void testGetAll_ExceptionHandled() {
+        SessionFactory mockFactory = mock(SessionFactory.class);
+        when(mockFactory.openSession()).thenThrow(new RuntimeException("Ошибка при получении всех"));
+
+        UserDao faultyDao = new UserDao(mockFactory);
+        List<User> result = faultyDao.getAll();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
 }

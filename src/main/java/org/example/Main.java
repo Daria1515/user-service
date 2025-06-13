@@ -2,13 +2,19 @@ package org.example;
 
 import org.example.dao.UserDao;
 import org.example.model.User;
+import org.example.util.HibernateUtil;
+import org.hibernate.SessionFactory;
 
 import java.util.Scanner;
 
 public class Main {
-    private static final UserDao dao = new UserDao();
+    //private static final UserDao dao = new UserDao();
 
     public static void main(String[] args) {
+
+        SessionFactory factory = HibernateUtil.getSessionFactory();
+        UserDao dao = new UserDao(factory);
+
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.println("""
