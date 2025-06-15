@@ -1,7 +1,6 @@
 package org.example.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,22 +11,37 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false, unique = true)
     private String email;
+
     private int age;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    public User() {
+        // Для JPA
+    }
 
     public User(String name, String email, int age) {
         this.name = name;
         this.email = email;
         this.age = age;
-        this.createdAt = LocalDateTime.now();
     }
 
-    public User() {
+    public User(Long id, String name, String email, int age) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.age = age;
+    }
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -66,7 +80,7 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    //для тестов
+    // Только для тестов
     public void setId(Long id) {
         this.id = id;
     }

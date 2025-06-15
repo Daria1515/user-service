@@ -1,34 +1,49 @@
 package org.example.service;
 
-import org.example.dao.UserDao;
+import org.example.dto.UserDto;
+import org.example.mapper.UserMapper;
 import org.example.model.User;
+import org.example.repository.UserRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Service
 public class UserService {
-    private final UserDao dao;
+    private final UserRepository repository;
 
-    public UserService(UserDao dao) {
-        this.dao = dao;
+    public UserService(UserRepository repository) {
+        this.repository = repository;
     }
 
-    public void registerUser(String name, String email, int age) {
-        dao.save(new User(name, email, age));
+    public List<UserDto> getAllUsers() {
+        return repository.findAll().stream()
+                .map(UserMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public List<User> listUsers() {
-        return dao.getAll();
+    public UserDto getUserById(Long id) {
+        return repository.findById(id).map(UserMapper::toDto).orElse(null);
     }
 
-    public User getUser(Long id){
-        return dao.get(id);
+    public UserDto createUser(UserDto dto) {
+        User user = UserMapper.toEntity(dto);
+        return UserMapper.toDto(repository.save(user));
     }
 
-    public void updateUser(User user){
-        dao.update(user);
+    public UserDto updateUser(Long id, UserDto dto) {
+        User user = repository.findById(id).orElse(null);
+        if (user == null) return null;
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setAge(dto.getAge());
+        return UserMapper.toDto(repository.save(user));
     }
 
-    public void deleteUser(Long id){
-        dao.delete(id);
+    public boolean deleteUser(Long id) {
+        if (!repository.existsById(id)) return false;
+        repository.deleteById(id);
+        return true;
     }
 }
