@@ -1,6 +1,8 @@
 package org.example.service;
 
 import org.example.dto.UserDto;
+import org.example.kafka.KafkaProducer;
+import org.example.kafka.UserEvent;
 import org.example.mapper.UserMapper;
 import org.example.model.User;
 import org.example.repository.UserRepository;
@@ -12,9 +14,11 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private final UserRepository repository;
+    private final KafkaProducer kafkaProducer;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, KafkaProducer kafkaProducer) {
         this.repository = repository;
+        this.kafkaProducer = kafkaProducer;
     }
 
     public List<UserDto> getAllUsers() {
@@ -29,6 +33,7 @@ public class UserService {
 
     public UserDto createUser(UserDto dto) {
         User user = UserMapper.toEntity(dto);
+        kafkaProducer.send(new UserEvent(dto.getEmail(), "CREATE"));
         return UserMapper.toDto(repository.save(user));
     }
 
@@ -42,8 +47,11 @@ public class UserService {
     }
 
     public boolean deleteUser(Long id) {
-        if (!repository.existsById(id)) return false;
+        User user = repository.findById(id).orElse(null);
+        if (user == null) return false;
+        String email = user.getEmail();
         repository.deleteById(id);
+        kafkaProducer.send(new UserEvent(email, "DELETE"));
         return true;
     }
 }
