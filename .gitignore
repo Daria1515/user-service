@@ -5,6 +5,7 @@ target/
 
 # Logs
 *.log
+logs/
 
 # Java
 *.class
@@ -49,3 +50,7 @@ Thumbs.db
 
 # Testcontainers
 testcontainers.properties
+
+
+# Batch files
+*.bat

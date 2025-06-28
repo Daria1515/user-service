@@ -1,7 +1,7 @@
 package org.example.service;
 
 import org.example.dto.UserDto;
-import org.example.kafka.KafkaProducer;
+import org.example.kafka.UserEventProducer;
 import org.example.kafka.UserEvent;
 import org.example.mapper.UserMapper;
 import org.example.model.User;
@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private final UserRepository repository;
-    private final KafkaProducer kafkaProducer;
+    private final UserEventProducer userEventProducer;
 
-    public UserService(UserRepository repository, KafkaProducer kafkaProducer) {
+    public UserService(UserRepository repository, UserEventProducer userEventProducer) {
         this.repository = repository;
-        this.kafkaProducer = kafkaProducer;
+        this.userEventProducer = userEventProducer;
     }
 
     public List<UserDto> getAllUsers() {
@@ -33,8 +33,12 @@ public class UserService {
 
     public UserDto createUser(UserDto dto) {
         User user = UserMapper.toEntity(dto);
-        kafkaProducer.send(new UserEvent(dto.getEmail(), "CREATE"));
-        return UserMapper.toDto(repository.save(user));
+        User savedUser = repository.save(user);
+
+        userEventProducer.send(new UserEvent(dto.getEmail(), UserEvent.OPERATION_CREATE));
+        System.out.println("Событие CREATE отправлено в Kafka для " + dto.getEmail());
+        
+        return UserMapper.toDto(savedUser);
     }
 
     public UserDto updateUser(Long id, UserDto dto) {
@@ -51,7 +55,10 @@ public class UserService {
         if (user == null) return false;
         String email = user.getEmail();
         repository.deleteById(id);
-        kafkaProducer.send(new UserEvent(email, "DELETE"));
+
+        userEventProducer.send(new UserEvent(email, UserEvent.OPERATION_DELETE));
+        System.out.println("Событие DELETE отправлено в Kafka для " + email);
+        
         return true;
     }
 }

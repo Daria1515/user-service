@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.dto.UserDto;
+import org.example.kafka.UserEventProducer;
 import org.example.mapper.UserMapper;
 import org.example.model.User;
 import org.example.repository.UserRepository;
@@ -18,12 +19,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserServiceTest {
 
     private UserRepository repository;
+    private UserEventProducer eventProducer;
     private UserService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(UserRepository.class);
-        service = new UserService(repository);
+        eventProducer = mock(UserEventProducer.class);
+        service = new UserService(repository, eventProducer);
     }
 
     @Test

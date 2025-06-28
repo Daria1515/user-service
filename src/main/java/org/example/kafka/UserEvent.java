@@ -1,6 +1,9 @@
 package org.example.kafka;
 
 public class UserEvent {
+    public static final String OPERATION_CREATE = "CREATE";
+    public static final String OPERATION_DELETE = "DELETE";
+    
     private String email;
     private String operation;
 
