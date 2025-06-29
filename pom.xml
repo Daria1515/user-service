@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.0</version>
+        <version>3.2.6</version>
         <relativePath/>
     </parent>
 
@@ -74,7 +74,6 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-
         <!-- База данных -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -127,7 +126,23 @@
             <version>2.3.232</version>
         </dependency>
 
-        <!-- Kafka -->
+        <!-- Springdoc OpenAPI (Swagger) - совместимая версия -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
+        <!-- HATEOAS - временно отключено из-за проблем совместимости -->
+        <!--
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-hateoas</artifactId>
+        </dependency>
+        -->
+
+        <!-- Kafka - временно отключено -->
+        <!--
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
@@ -137,6 +152,7 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
         </dependency>
+        -->
 
     </dependencies>
 </project>

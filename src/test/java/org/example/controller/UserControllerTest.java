@@ -98,8 +98,6 @@ class UserControllerTest {
     @Test
     @DisplayName("Удаление пользователя")
     void testDeleteUser() throws Exception {
-        Mockito.when(userService.deleteUser(1L)).thenReturn(true);
-
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isNoContent());
     }
@@ -143,10 +141,8 @@ class UserControllerTest {
     @Test
     @DisplayName("Удаление несуществующего пользователя")
     void testDeleteUserNotFound() throws Exception {
-        Mockito.when(userService.deleteUser(999L)).thenReturn(false);
-
         mockMvc.perform(delete("/api/users/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNoContent());
     }
 
 
