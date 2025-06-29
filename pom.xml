@@ -133,13 +133,11 @@
             <version>2.2.0</version>
         </dependency>
 
-        <!-- HATEOAS - временно отключено из-за проблем совместимости -->
-        <!--
+        <!-- HATEOAS - с явным указанием версии -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-hateoas</artifactId>
         </dependency>
-        -->
 
         <!-- Kafka - временно отключено -->
         <!--

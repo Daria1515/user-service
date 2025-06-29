@@ -1,10 +1,14 @@
 package org.example.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
+
 import java.time.LocalDateTime;
 
 @Schema(description = "DTO для пользователя")
-public class UserDto {
+@Relation(collectionRelation = "users", itemRelation = "user")
+public class UserDto extends RepresentationModel<UserDto> {
 
     @Schema(description = "Уникальный идентификатор пользователя", example = "1")
     private Long id;

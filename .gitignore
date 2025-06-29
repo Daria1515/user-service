@@ -51,6 +51,10 @@ Thumbs.db
 # Testcontainers
 testcontainers.properties
 
-
-# Batch files
+# Development files
 *.bat
+HATEOAS_CHECK.md
+compile.bat
+test-hateoas.bat
+run.bat
+clean.bat
