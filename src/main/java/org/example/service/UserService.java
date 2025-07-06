@@ -1,8 +1,9 @@
 package org.example.service;
 
 import org.example.dto.UserDto;
-// import org.example.kafka.UserEventProducer;
-// import org.example.kafka.UserEvent;
+import org.example.kafka.UserEventProducer;
+import org.example.kafka.UserEvent;
+
 import org.example.mapper.UserMapper;
 import org.example.model.User;
 import org.example.repository.UserRepository;
@@ -14,11 +15,11 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private final UserRepository repository;
-    // private final UserEventProducer userEventProducer;
+    private final UserEventProducer userEventProducer;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, UserEventProducer userEventProducer) {
         this.repository = repository;
-        // this.userEventProducer = userEventProducer;
+        this.userEventProducer = userEventProducer;
     }
 
     public List<UserDto> getAllUsers() {
@@ -35,8 +36,13 @@ public class UserService {
         User user = UserMapper.toEntity(dto);
         User savedUser = repository.save(user);
 
-        // userEventProducer.send(new UserEvent(dto.getEmail(), UserEvent.OPERATION_CREATE));
-        System.out.println("Событие CREATE отправлено в Kafka для " + dto.getEmail());
+        try {
+            userEventProducer.send(new UserEvent(dto.getEmail(), UserEvent.OPERATION_CREATE));
+            System.out.println("Событие CREATE отправлено в Kafka для " + dto.getEmail());
+        } catch (Exception e) {
+            System.err.println("Ошибка отправки события в Kafka: " + e.getMessage());
+            // Не прерываем выполнение, если Kafka недоступен
+        }
         
         return UserMapper.toDto(savedUser);
     }
@@ -47,7 +53,16 @@ public class UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setAge(dto.getAge());
-        return UserMapper.toDto(repository.save(user));
+        User updatedUser = repository.save(user);
+        
+        try {
+            userEventProducer.send(new UserEvent(updatedUser.getEmail(), UserEvent.OPERATION_UPDATE));
+            System.out.println("Событие UPDATE отправлено в Kafka для " + updatedUser.getEmail());
+        } catch (Exception e) {
+            System.err.println("Ошибка отправки события в Kafka: " + e.getMessage());
+        }
+        
+        return UserMapper.toDto(updatedUser);
     }
 
     public void deleteUser(Long id) {
@@ -56,7 +71,11 @@ public class UserService {
         String email = user.getEmail();
         repository.deleteById(id);
 
-        // userEventProducer.send(new UserEvent(email, UserEvent.OPERATION_DELETE));
-        System.out.println("Событие DELETE отправлено в Kafka для " + email);
+        try {
+            userEventProducer.send(new UserEvent(email, UserEvent.OPERATION_DELETE));
+            System.out.println("Событие DELETE отправлено в Kafka для " + email);
+        } catch (Exception e) {
+            System.err.println("Ошибка отправки события в Kafka: " + e.getMessage());
+        }
     }
 }

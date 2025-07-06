@@ -27,7 +27,8 @@ public class OpenApiConfig {
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))
                 .servers(List.of(
-                        new Server().url("http://localhost:8090").description("Локальный сервер разработки")
+                        new Server().url("http://localhost:8081").description("Локальный сервер разработки"),
+                        new Server().url("http://localhost:8083").description("Альтернативный порт")
                 ));
     }
 } 

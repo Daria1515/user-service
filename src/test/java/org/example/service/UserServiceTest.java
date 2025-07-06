@@ -1,7 +1,7 @@
 package org.example.service;
 
 import org.example.dto.UserDto;
-// import org.example.kafka.UserEventProducer;
+import org.example.kafka.UserEventProducer;
 import org.example.mapper.UserMapper;
 import org.example.model.User;
 import org.example.repository.UserRepository;
@@ -19,14 +19,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserServiceTest {
 
     private UserRepository repository;
-    // private UserEventProducer eventProducer;
+    private UserEventProducer eventProducer;
     private UserService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(UserRepository.class);
-        // eventProducer = mock(UserEventProducer.class);
-        service = new UserService(repository);
+        eventProducer = mock(UserEventProducer.class);
+        service = new UserService(repository, eventProducer);
     }
 
     @Test
@@ -69,6 +69,7 @@ class UserServiceTest {
         UserDto created = service.createUser(dto);
         assertNotNull(created);
         assertEquals("Nikolay", created.getName());
+        verify(eventProducer).send(any());
     }
 
     @Test
@@ -92,5 +93,6 @@ class UserServiceTest {
 
         service.deleteUser(1L);
         verify(repository).deleteById(1L);
+        verify(eventProducer).send(any());
     }
 }

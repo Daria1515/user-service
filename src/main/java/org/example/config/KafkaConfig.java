@@ -1,7 +1,5 @@
 package org.example.config;
 
-// Kafka конфигурация временно отключена
-/*
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,5 +15,4 @@ public class KafkaConfig {
                 .replicas(1)
                 .build();
     }
-}
-*/ 
+} 
