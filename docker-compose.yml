@@ -1,6 +1,42 @@
 version: '3.8'
 
 services:
+  # Eureka Server
+  eureka-server:
+    build: ../eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+
+  # Config Server
+  config-server:
+    build: ../config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka-server
+    networks:
+      - microservices-network
+
+  # API Gateway
+  api-gateway:
+    build: ../api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    depends_on:
+      - eureka-server
+      - config-server
+    networks:
+      - microservices-network
+
   # PostgreSQL Database
   postgres:
     image: postgres:15
@@ -48,14 +84,18 @@ services:
     build: .
     container_name: user-service-app
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/userdb
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     depends_on:
       - postgres
       - kafka
+      - eureka-server
+      - config-server
     networks:
       - microservices-network
 
@@ -68,10 +108,14 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      EMAIL_USERNAME: hellhitomi@gmail.com
-      EMAIL_PASSWORD: tmxx rlwu vzja epuc
+      EMAIL_USERNAME: example@gmail.com
+      EMAIL_PASSWORD: example
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     depends_on:
       - kafka
+      - eureka-server
+      - config-server
     networks:
       - microservices-network
 

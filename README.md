@@ -1,166 +1,163 @@
-# User Service - Микросервисное приложение
+# Микросервисная архитектура с паттернами
 
 Spring Boot приложение для управления пользователями с поддержкой микросервисных паттернов.
 
 ## Архитектура
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  User Service   │    │Notification Svc │    │   PostgreSQL    │
-│   (Port 8081)   │    │  (Port 8084)    │    │   (Port 5433)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │     Kafka       │
-                    │   (Port 9092)   │
-                    └─────────────────┘
-```
+### Сервисы:
+- **Eureka Server** (порт 8761) - Service Discovery
+- **Config Server** (порт 8888) - External Configuration
+- **API Gateway** (порт 8080) - Gateway API
+- **User Service** (порт 8081) - Основной сервис пользователей
+- **Notification Service** (порт 8082) - Сервис уведомлений
 
-## Сервисы
+### Инфраструктура:
+- **PostgreSQL** (порт 5433) - База данных
+- **Kafka** (порт 9092) - Message Broker
 
-### User Service (Port 8081)
-- CRUD операции для пользователей
-- Отправка событий в Kafka при создании/удалении
-- Swagger документация
-- HATEOAS поддержка
+## Запуск
 
-### Notification Service (Port 8084)
-- Получение событий из Kafka
-- Отправка email уведомлений
-- Swagger документация
-
-## Возможности
-
-- CRUD операции для пользователей
-- Swagger/OpenAPI документация
-- HATEOAS (Hypermedia as the Engine of Application State)
-- Kafka интеграция (события CREATE/DELETE)
-- Email уведомления с HTML шаблонами
-- Валидация данных
-- PostgreSQL база данных
-- Логирование
-
-## Настройка Email (Gmail)
-
-### 1. Подготовка Gmail аккаунта
-
-Для отправки настоящих писем необходимо настроить Gmail:
-
-1. **Включите двухфакторную аутентификацию:**
-   - Перейдите в https://myaccount.google.com/security
-   - Включите "Двухэтапную аутентификацию"
-
-2. **Создайте пароль приложения:**
-   - Перейдите в https://myaccount.google.com/apppasswords
-   - Выберите "Почта" и "Другое (пользовательское имя)"
-   - Введите название: "Notification Service"
-   - Скопируйте сгенерированный пароль (16 символов)
-
-### 2. Настройка переменных окружения
+### Вариант 1: Docker Compose (рекомендуется)
 
 ```bash
-# Windows
-set EMAIL_USERNAME=your-email@gmail.com
-set EMAIL_PASSWORD=your-16-char-app-password
+# Сборка и запуск всех сервисов
+docker-compose up --build
 
-# Linux/Mac
-export EMAIL_USERNAME=your-email@gmail.com
-export EMAIL_PASSWORD=your-16-char-app-password
+# Запуск в фоновом режиме
+docker-compose up -d --build
 ```
 
-### 3. Или настройка в application.properties
+### Вариант 2: Локальный запуск
 
-```properties
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-16-char-app-password
-```
-
-## Запуск приложения
-
-### 1. Запуск инфраструктуры (Kafka + PostgreSQL)
-
+1. **Запуск инфраструктуры:**
 ```bash
-# Запуск Kafka и PostgreSQL через Docker Compose
-docker-compose up -d kafka zookeeper postgres
+# PostgreSQL и Kafka
+docker-compose up postgres zookeeper kafka -d
 ```
 
-### 2. Запуск User Service
-
+2. **Запуск сервисов по порядку:**
 ```bash
-# В папке user-service
-mvn clean compile
-mvn spring-boot:run -Dspring-boot.run.profiles=dev -Dserver.port=8081
+# 1. Eureka Server
+cd eureka-server
+mvn spring-boot:run
+
+# 2. Config Server
+cd ../config-server
+mvn spring-boot:run
+
+# 3. User Service
+cd ../user-service
+mvn spring-boot:run
+
+# 4. Notification Service
+cd ../notification-service
+mvn spring-boot:run
+
+# 5. API Gateway
+cd ../api-gateway
+mvn spring-boot:run
 ```
 
-### 3. Запуск Notification Service
+## 📋 Реализованные паттерны
 
-```bash
-# В папке notification-service
-mvn clean compile
-mvn spring-boot:run -Dspring-boot.run.profiles=docker -Dserver.port=8084
-```
+### 1. **Service Discovery (Eureka)**
+- Автоматическая регистрация сервисов
+- Обнаружение сервисов по имени
+- Health checks
 
-## Доступные сервисы
+### 2. **External Configuration (Config Server)**
+- Централизованная конфигурация
+- Локальные конфигурационные файлы
+- Поддержка профилей
 
-| Сервис | URL | Описание |
-|--------|-----|----------|
-| User Service | http://localhost:8081 | Основное приложение |
-| Notification Service | http://localhost:8084 | Сервис уведомлений |
-| Swagger UI (User) | http://localhost:8081/swagger-ui.html | API документация |
-| Swagger UI (Notif) | http://localhost:8084/swagger-ui.html | API документация |
-| H2 Console | http://localhost:8081/h2-console | База данных (dev) |
-| Actuator (User) | http://localhost:8081/actuator | Мониторинг |
-| Actuator (Notif) | http://localhost:8084/actuator | Мониторинг |
+### 3. **Circuit Breaker (Resilience4j)**
+- Защита от каскадных сбоев
+- Fallback методы
+- Автоматическое восстановление
 
-## API Endpoints
+### 4. **Gateway API (Spring Cloud Gateway)**
+- Единая точка входа
+- Маршрутизация запросов
+- Circuit breaker на уровне Gateway
+- Fallback обработка
 
-### User Service
-- `GET /api/users` - Получить всех пользователей
-- `GET /api/users/{id}` - Получить пользователя по ID
-- `POST /api/users` - Создать пользователя
-- `PUT /api/users/{id}` - Обновить пользователя
-- `DELETE /api/users/{id}` - Удалить пользователя
+## Endpoints
 
-### Notification Service
-- `POST /api/email/send` - Отправить тестовое письмо
-- `POST /api/email/welcome` - Отправить приветственное письмо
-- `POST /api/email/goodbye` - Отправить прощальное письмо
-- `GET /api/email/test` - Тест email сервиса
+### API Gateway (порт 8080):
+- `http://localhost:8080/api/users/**` → User Service
+- `http://localhost:8080/api/notifications/**` → Notification Service
+- `http://localhost:8080/api/external/**` → External Service
+
+### Eureka Dashboard:
+- `http://localhost:8761` - Регистр сервисов
+
+### Config Server:
+- `http://localhost:8888/user-service/default` - Конфигурация User Service
+- `http://localhost:8888/notification-service/default` - Конфигурация Notification Service
+
+### Actuator Endpoints:
+- `http://localhost:8080/actuator/health` - Health check Gateway
+- `http://localhost:8081/actuator/health` - Health check User Service
+- `http://localhost:8082/actuator/health` - Health check Notification Service
 
 ## Тестирование
 
-### 1. Создание пользователя
-1. Откройте http://localhost:8081/swagger-ui.html
-2. Выберите сервер: http://localhost:8081
-3. Выполните POST /api/users с данными пользователя
-4. Проверьте, что приветственное письмо отправлено
+### Проверка Service Discovery:
+```bash
+curl http://localhost:8761/eureka/apps
+```
 
-### 2. Удаление пользователя
-1. Выполните DELETE /api/users/{id}
-2. Проверьте, что прощальное письмо отправлено
+### Проверка Circuit Breaker:
+```bash
+# Вызов ненадежного сервиса
+curl http://localhost:8080/api/external/unreliable
+```
 
-### 3. Тестирование email напрямую
-1. Откройте http://localhost:8084/swagger-ui.html
-2. Выполните POST /api/email/send для тестирования
+### Проверка Gateway:
+```bash
+# Через Gateway
+curl http://localhost:8080/api/users/1
+
+# Прямой вызов
+curl http://localhost:8081/users/1
+```
+
+## Структура проекта
+
+```
+user-service/
+├── api-gateway/          # API Gateway
+├── config-server/        # Config Server
+├── eureka-server/        # Eureka Server
+├── src/                  # User Service
+├── docker-compose.yml    # Docker Compose
+└── README.md
+```
 
 ## Конфигурация
 
-### Профили
-- `dev` - H2 база данных, локальная разработка
-- `docker` - PostgreSQL, Kafka
+### Circuit Breaker настройки:
+- **external-api**: 50% failure rate, 10s wait time
+- **unreliable-service**: 70% failure rate, 5s wait time
+- **email-provider**: 50% failure rate, 10s wait time
 
-### Порты
-- User Service: 8081
-- Notification Service: 8084
-- PostgreSQL: 5433
-- Kafka: 9092
-- Zookeeper: 2181
+### Gateway маршруты:
+- `/api/users/**` → User Service
+- `/api/notifications/**` → Notification Service
+- `/api/external/**` → External Service (через User Service)
 
-## Требования
+## Отладка
 
-- Java 17+
-- Maven 3.6+
-- Docker (для Kafka и PostgreSQL)
-- Gmail аккаунт (для email уведомлений)
+### Логи:
+```bash
+# Просмотр логов всех сервисов
+docker-compose logs -f
+
+# Логи конкретного сервиса
+docker-compose logs -f user-service
+```
+
+### Мониторинг:
+- Eureka Dashboard: `http://localhost:8761`
+- Actuator endpoints для каждого сервиса
+- Circuit breaker метрики в `/actuator/circuitbreakers`
