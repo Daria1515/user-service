@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Eureka Server
   eureka-server:
-    build: ../eureka-server
+    build: ./eureka-server
     container_name: eureka-server
     ports:
       - "8761:8761"
@@ -12,7 +12,7 @@ services:
 
   # Config Server
   config-server:
-    build: ../config-server
+    build: ./config-server
     container_name: config-server
     ports:
       - "8888:8888"
@@ -23,10 +23,10 @@ services:
 
   # API Gateway
   api-gateway:
-    build: ../api-gateway
+    build: ./api-gateway
     container_name: api-gateway
     ports:
-      - "8080:8080"
+      - "8083:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
